@@ -27,6 +27,8 @@ function Level:init()
 
         -- if we collided between both the player and an obstacle...
         if types['Obstacle'] and types['Player'] then
+            -- CS50 Assignment 6 - chamge the flag to show a player collision
+            self.playerCollided = true
 
             -- grab the body that belongs to the player
             local playerFixture = a:getUserData() == 'Player' and a or b
@@ -59,6 +61,8 @@ function Level:init()
 
         -- if we collided between the player and the alien...
         if types['Player'] and types['Alien'] then
+            -- CS50 Assignment 6 - chamge the flag to show a player collision
+            self.playerCollided = true
 
             -- grab the bodies that belong to the player and alien
             local playerFixture = a:getUserData() == 'Player' and a or b
@@ -100,6 +104,9 @@ function Level:init()
 
     -- shows alien before being launched and its trajectory arrow
     self.launchMarker = AlienLaunchMarker(self.world)
+
+-- CS50 Assignment 6 - flag for if the player has collided with anything
+    self.playerCollided = false
 
     -- aliens in our scene
     self.aliens = {}
@@ -177,6 +184,9 @@ function Level:update(dt)
         
         -- if we fired our alien to the left or it's almost done rolling, respawn
         if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) then
+            -- CS50 Assignment 6 - reset the flag for player collision
+            self.playerCollided = false
+            
             self.launchMarker.alien.body:destroy()
             self.launchMarker = AlienLaunchMarker(self.world)
 
