@@ -61,7 +61,7 @@ function Level:init()
 
         -- if we collided between the player and the alien...
         if types['Player'] and types['Alien'] then
-            -- CS50 Assignment 6 - chamge the flag to show a player collision
+            -- CS50 Assignment 6 - change the flag to show a player collision
             self.playerCollided = true
 
             -- grab the bodies that belong to the player and alien
@@ -107,8 +107,10 @@ function Level:init()
 
 -- CS50 Assignment 6 - flag for if the player has collided with anything
     self.playerCollided = false
+    
     -- Check if the player's alien has split up
     self.playerSplit = false
+
     -- Table to store the extra player aliens after splitting
     self.extraPlayers = {}
 
@@ -187,7 +189,6 @@ function Level:update(dt)
 
         local xPos, yPos = self.launchMarker.alien.body:getPosition()
         local xVel, yVel = self.launchMarker.alien.body:getLinearVelocity()
-
 
         -- CS50 Assignment 6 - If space pressed spawn two extra "player" aliens
         if love.keyboard.wasPressed("space") and not self.playerCollided  and not self.playerSplit then
