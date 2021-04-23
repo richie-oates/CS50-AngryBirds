@@ -107,6 +107,10 @@ function Level:init()
 
 -- CS50 Assignment 6 - flag for if the player has collided with anything
     self.playerCollided = false
+    -- Check if the player's alien has split up
+    self.playerSplit = false
+    -- Table to store the extra player aliens after splitting
+    self.extraPlayers = {}
 
     -- aliens in our scene
     self.aliens = {}
@@ -177,16 +181,51 @@ function Level:update(dt)
         end
     end
 
-    -- replace launch marker if original alien stopped moving
+    -- replace launch marker if player aliens stopped moving
     if self.launchMarker.launched then
+        local extraPlayersStopped = false
+
         local xPos, yPos = self.launchMarker.alien.body:getPosition()
         local xVel, yVel = self.launchMarker.alien.body:getLinearVelocity()
+
+
+        -- CS50 Assignment 6 - If space pressed spawn two extra "player" aliens
+        if love.keyboard.wasPressed("space") and not self.playerCollided  and not self.playerSplit then
+            -- Spawn two aliens with slightly different trajectories
+            for i = 1, 2 do
+                -- Starting position the same as the original
+                newAlien = Alien(self.world, 'round', xPos, yPos, 'Player')
+                -- Slight random variation on linear velocity for new aliens
+                newAlien.body:setLinearVelocity(xVel * math.random(85, 115) / 100, i == 1 and yVel * math.random(105, 115) / 100 or yVel * math.random(85, 95) / 100)
+                newAlien.fixture:setRestitution(0.4)
+                newAlien.body:setAngularDamping(1)
+                table.insert(self.extraPlayers, newAlien)
+            end
+            self.playerSplit = true
+        end
+
+        -- Check to see if the extra player aliens have stopped moving or gone out of bounds
+        if self.playerSplit then
+            local stoppedPlayers = {}
+            for k, alien in pairs(self.extraPlayers) do
+                local xV, yV = alien.body:getLinearVelocity()
+                local xP, yP = alien.body:getPosition()
+                if (math.abs(xV) + math.abs(yV)) < 2 or xP > VIRTUAL_WIDTH * 2 then
+                    table.insert(stoppedPlayers, alien)
+                end
+                if #stoppedPlayers == #self.extraPlayers then
+                    extraPlayersStopped = true
+                end
+            end
+        end
         
-        -- if we fired our alien to the left or it's almost done rolling, respawn
-        if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) then
-            -- CS50 Assignment 6 - reset the flag for player collision
+        -- if we fired our alien to the left or all our aliens have almost done rolling, respawn
+        if xPos < 0 or xPos > VIRTUAL_WIDTH * 2 or ((math.abs(xVel) + math.abs(yVel) < 2) and #self.extraPlayers == 0 or extraPlayersStopped) then
+            -- CS50 Assignment 6 - reset the flag for player collision and split and empty the table for extra players
             self.playerCollided = false
-            
+            self.playerSplit = false
+            self.extraPlayers = {}
+
             self.launchMarker.alien.body:destroy()
             self.launchMarker = AlienLaunchMarker(self.world)
 
@@ -207,6 +246,10 @@ function Level:render()
 
     self.launchMarker:render()
 
+    for k, alien in pairs(self.extraPlayers) do
+        alien:render()
+    end
+
     for k, alien in pairs(self.aliens) do
         alien:render()
     end
@@ -215,7 +258,7 @@ function Level:render()
         obstacle:render()
     end
 
-    -- render instruction text if we haven't launched bird
+    -- render instruction text if we haven't launched alien
     if not self.launchMarker.launched then
         love.graphics.setFont(gFonts['medium'])
         love.graphics.setColor(0, 0, 0, 1)
